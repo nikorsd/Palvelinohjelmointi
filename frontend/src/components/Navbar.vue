@@ -14,6 +14,9 @@
                         <a class="nav-link" :class="{ active: currentRoute === '/' }" @click="$router.push('/')">Etusivu</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" :class="{ active: currentRoute === '/about' }" @click="$router.push('/about')">Lisätietoja</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" :class="{ active: currentRoute === '/login' }" @click="$router.push('/login')">Kirjaudu sisään</a>
                     </li>
                     <li class="nav-item">
@@ -37,6 +40,11 @@
     .navbar-brand img {
         border-radius: 20px;
         cursor: pointer;
+    }
+
+    .nav-link {
+        cursor: pointer;
+        transition: font-weight 0.3s ease-in-out;
     }
 
     .nav-link.active, .dropdown-item.active {
