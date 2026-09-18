@@ -17,7 +17,7 @@
                         <a class="nav-link" :class="{ active: currentRoute === '/about' }" @click="$router.push('/about')">Lisätietoja</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" :class="{ active: currentRoute === '/login' }" @click="$router.push('/login')">Kirjaudu sisään</a>
+                        <a class="nav-link" :class="{ active: currentRoute === '/signup' }" @click="$router.push('/signup')">Rekisteröidy</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" :class="{ active: currentRoute === '/contact' }" @click="$router.push('/contact')">Ota yhteyttä</a>
@@ -37,17 +37,43 @@
 </script>
 
 <style scoped>
+    .navbar {
+        background-color: rgba(5, 5, 8, 0.9) !important;
+        border-bottom: 1px solid #1a1a2a;
+    }
+
+    .navbar-brand {
+        color: #ffffff !important;
+    }
+
     .navbar-brand img {
-        border-radius: 20px;
+        border-radius: 10px;
         cursor: pointer;
+    }
+
+    .navbar-toggler {
+        border-color: #1a1a2a !important;
+    }
+
+    .navbar-toggler-icon {
+        /* Made by AI */
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 0.8)' stroke-linecap='round' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
     }
 
     .nav-link {
         cursor: pointer;
-        transition: font-weight 0.3s ease-in-out;
+        color: #8a8a9a !important;
+        transition: color 0.2s, font-weight 0.2s;
     }
 
-    .nav-link.active, .dropdown-item.active {
-        font-weight: 800 !important;
+    .nav-link:hover,
+    .nav-link:focus {
+        color: #ffffff !important;
+    }
+
+    .nav-link.active,
+    .dropdown-item.active {
+        color: #00e5ff !important;
+        font-weight: 700;
     }
 </style>

@@ -22,7 +22,7 @@
                 </div>
             </div>
         </section>
-        <section id="rekisteroi" class="section signup-section">
+        <section class="section signup-section">
             <div class="container">
                 <h2 class="signup-title">Tervetuloa pelaamaan</h2>
                 <p class="signup-desc">Varaa itsellesi paikka turnauksesta.</p>
@@ -32,10 +32,15 @@
     </div>
 </template>
 
+<style>
+    @import '../components/styles/Button.css';
+</style>
+
 <style scoped>
     .about-page {
-        background-color: #050508;
+        background-color: black;
         color: #FFFFFF;
+        min-height: 100vh;
     }
 
     .section {
@@ -53,10 +58,6 @@
         margin-bottom: 2rem;
     }
 
-    .games {
-        background: #08080d;
-    }
-
     .games-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -64,16 +65,13 @@
     }
 
     .game-card {
-        background: #0d0d14;
         border: 1px solid #1a1a2a;
         border-radius: 10px;
         padding: 1.25rem;
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        transition:
-            border-color 0.2s,
-            transform 0.2s;
+        transition: border-color 0.2s, transform 0.2s;
     }
 
     .game-emoji {
@@ -87,7 +85,6 @@
 
     .signup-section {
         text-align: center;
-        background: #08080d;
     }
 
     .signup-title {
@@ -102,27 +99,6 @@
         max-width: 400px;
         margin-left: auto;
         margin-right: auto;
-    }
-
-    .btn-primary {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.9rem 2rem;
-        font-size: 1rem;
-        font-weight: 700;
-        color: #050508;
-        background: #00e5ff;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        transition:
-            background 0.2s,
-            transform 0.15s;
-    }
-
-    .btn-large {
-        padding: 1rem 2.5rem;
-        font-size: 1.1rem;
     }
 
     @media (max-width: 768px) {
