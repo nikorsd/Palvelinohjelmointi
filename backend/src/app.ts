@@ -1,17 +1,17 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
+import publicRoutes from "./routes/public";
+import privateRoutes from "./routes/private";
 
 const app = express();
 
-app.use(cors({
-  origin: "http://localhost:5173",
-  credentials: true,
-}));
+app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+app.use(cookieParser());
 app.use(express.json());
 
-// Example route
-app.get("/api/health", (_req, res) => {
-    res.json({ status: "ok" });
-});
+// Mount routes under /api
+app.use("/api", publicRoutes);
+app.use("/api", privateRoutes);
 
 export default app;

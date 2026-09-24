@@ -1,59 +1,37 @@
 <script setup>
-    import { reactive, ref } from 'vue';
+    import { reactive, ref, onMounted } from 'vue';
+    import { useRouter } from 'vue-router';
+    import { useAuth } from '@/composables/auth';
     import '../components/styles/Button.css';
 
+    const router = useRouter();
+    const { user, login, fetchMe } = useAuth();
+
     const error = ref('');
-    const success = ref('');
     const loading = ref(false);
 
     const form = reactive({
-        username: '',
         email: '',
         password: '',
-        passwordConfirm: '',
+    });
+
+    // Redirect if already logged in
+    onMounted(() => {
+        if (user.value) {
+            router.push('/');
+        }
     });
 
     async function handleSubmit() {
         error.value = '';
-        success.value = '';
-
-        if (form.password !== form.passwordConfirm) {
-            error.value = 'Salasanat eivät täsmää.';
-            return;
-        }
-
-        if (form.password.length < 8) {
-            error.value = 'Salasanan on oltava vähintään 8 merkkiä.';
-            return;
-        }
-
         loading.value = true;
         try {
-            const res = await fetch('/api/signup', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(form),
-            });
-            const data = await res.json();
-
-            if (!res.ok) {
-                error.value = data.error || 'Rekisteröinti epäonnistui.';
-                return;
-            }
-
-            success.value = data.message || 'Rekisteröinti onnistui!';
-            // Reset form on success
-            form.username = '';
-            form.email = '';
-            form.password = '';
-            form.passwordConfirm = '';
-
-            // Redirect to signin after a short delay
-            setTimeout(() => {
-                $router.push('/signin');
-            }, 2000);
-        } catch {
-            error.value = 'Yhteydenotto palvelimeen epäonnistui.';
+            await login(form.email, form.password);
+            await fetchMe();
+            router.push('/');
+        } catch (e) {
+            const msg = e && typeof e === 'object' && 'message' in e ? e['message'] : null;
+            error.value = msg || 'Kirjautuminen epäonnistui.';
         } finally {
             loading.value = false;
         }
@@ -61,23 +39,13 @@
 </script>
 
 <template>
-    <div class="signup-page">
+    <div class="signin-page">
         <div class="grid"></div>
         <div class="wrapper">
             <div class="header">
-                <h1 class="title">Rekisteröidy</h1>
+                <h1 class="title">Kirjaudu sisään</h1>
             </div>
             <form @submit.prevent="handleSubmit">
-                <div class="field">
-                    <input
-                        id="username"
-                        v-model="form.username"
-                        type="text"
-                        class="input"
-                        placeholder="Käyttäjänimi"
-                        required
-                    >
-                </div>
                 <div class="field">
                     <input
                         id="email"
@@ -99,32 +67,20 @@
                         minlength="8"
                     >
                 </div>
-                <div class="field">
-                    <input
-                        id="passwordConfirm"
-                        v-model="form.passwordConfirm"
-                        type="password"
-                        class="input"
-                        placeholder="Vahvista salasana"
-                        required
-                        minlength="8"
-                    >
-                </div>
                 <p v-if="error" class="form-error">{{ error }}</p>
-                <p v-if="success" class="form-success">{{ success }}</p>
                 <button type="submit" class="btn-primary btn-large" :disabled="loading">
-                    {{ loading ? 'Luodaan tiliä...' : 'Luo tili' }}
+                    {{ loading ? 'Kirjaudutaan...' : 'Kirjaudu' }}
                 </button>
             </form>
             <p class="footer">
-                Onko sinulla jo tili? <a @click="$router.push('/signin')">Kirjaudu sisään</a>
+                Eikö sinulla ole tiliä? <a @click="$router.push('/signup')">Rekisteröidy</a>
             </p>
         </div>
     </div>
 </template>
 
 <style scoped>
-    .signup-page {
+    .signin-page {
         background-color: black;
         color: #ffffff;
         min-height: 100vh;
@@ -193,16 +149,8 @@
         box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.15);
     }
 
-    .error,
-    .form-error {
+    .error {
         color: red;
-        font-size: 0.85rem;
-        margin: 0;
-        text-align: center;
-    }
-
-    .form-success {
-        color: #00e5ff;
         font-size: 0.85rem;
         margin: 0;
         text-align: center;
