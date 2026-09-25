@@ -5,6 +5,7 @@ import {
     findUserByEmail,
     verifyPassword,
     createSession,
+    insertContact,
 } from "../db/database";
 
 const router = Router();
@@ -81,6 +82,23 @@ router.post("/signin", (req, res) => {
         message: "Kirjautuminen onnistui.",
         user: { id: user.id, username: user.username, email: user.email },
     });
+});
+
+// Contact form
+router.post("/contact", (req, res) => {
+    const { subject, email, message } = req.body;
+
+    if (!subject || !email || !message) {
+        return res.status(400).json({ error: "Täytä kaikki kentät." });
+    }
+
+    try {
+        insertContact(subject, email, message);
+        return res.json({ message: "Viesti lähetetty! Kiitos yhteydenotosta." });
+    } catch (err) {
+        console.error("Contact error:", err);
+        return res.status(500).json({ error: "Sisäinen virhe. Kokeile myöhemmin uudelleen." });
+    }
 });
 
 export default router;

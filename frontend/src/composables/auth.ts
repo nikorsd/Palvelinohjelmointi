@@ -15,7 +15,11 @@ async function fetchMe() {
         if (res.ok) {
             user.value = await res.json();
         } else {
+            // User deleted or session expired — clear everything
             user.value = null;
+            try {
+                await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+            } catch { /* ignore */ }
         }
     } catch {
         user.value = null;

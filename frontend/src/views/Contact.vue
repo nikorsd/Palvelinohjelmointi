@@ -1,37 +1,42 @@
 <script setup>
-    import { reactive, ref, onMounted } from 'vue';
-    import { useRouter } from 'vue-router';
-    import { useAuth } from '@/composables/auth';
+    import { reactive, ref } from 'vue';
     import '../components/styles/Button.css';
 
-    const router = useRouter();
-    const { user, login, fetchMe } = useAuth();
-
     const error = ref('');
+    const success = ref('');
     const loading = ref(false);
 
     const form = reactive({
+        subject: '',
         email: '',
-        password: '',
-    });
-
-    // Redirect if already logged in
-    onMounted(() => {
-        if (user.value) {
-            router.push('/');
-        }
+        message: '',
     });
 
     async function handleSubmit() {
         error.value = '';
+        success.value = '';
         loading.value = true;
         try {
-            await login(form.email, form.password);
-            await fetchMe();
-            router.push('/');
-        } catch (e) {
-            const msg = e && typeof e === 'object' && 'message' in e ? e['message'] : null;
-            error.value = msg || 'Kirjautuminen epäonnistui.';
+            const res = await fetch('/api/contact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(form),
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                error.value = data.error || 'Lähetys epäonnistui.';
+                return;
+            }
+
+            success.value = data.message || 'Viesti lähetetty!';
+            form.subject = '';
+            form.email = '';
+            form.message = '';
+
+            setTimeout(() => { success.value = ''; }, 5000);
+        } catch {
+            error.value = 'Yhteydenotto palvelimeen epäonnistui.';
         } finally {
             loading.value = false;
         }
@@ -39,12 +44,23 @@
 </script>
 
 <template>
-    <div class="signin-page">
+    <div class="contact-page">
         <div class="wrapper">
             <div class="header">
-                <h1 class="title">Kirjaudu sisään</h1>
+                <h1 class="title">Ota yhteyttä</h1>
+                <p class="subtitle">Lähetä meille viesti.</p>
             </div>
             <form @submit.prevent="handleSubmit">
+                <div class="field">
+                    <input
+                        id="subject"
+                        v-model="form.subject"
+                        type="text"
+                        class="input"
+                        placeholder="Aihe"
+                        required
+                    >
+                </div>
                 <div class="field">
                     <input
                         id="email"
@@ -56,30 +72,27 @@
                     >
                 </div>
                 <div class="field">
-                    <input
-                        id="password"
-                        v-model="form.password"
-                        type="password"
-                        class="input"
-                        placeholder="Salasana"
+                    <textarea
+                        id="message"
+                        v-model="form.message"
+                        class="input textarea"
+                        placeholder="Viesti"
+                        rows="5"
                         required
-                        minlength="8"
-                    >
+                    ></textarea>
                 </div>
                 <p v-if="error" class="form-error">{{ error }}</p>
+                <p v-if="success" class="form-success">{{ success }}</p>
                 <button type="submit" class="btn-primary btn-large" :disabled="loading">
-                    {{ loading ? 'Kirjaudutaan...' : 'Kirjaudu' }}
+                    {{ loading ? 'Lähetetään...' : 'Lähetä viesti' }}
                 </button>
             </form>
-            <p class="footer">
-                Eikö sinulla ole tiliä? <a @click="$router.push('/signup')">Rekisteröidy</a>
-            </p>
         </div>
     </div>
 </template>
 
 <style scoped>
-    .signin-page {
+    .contact-page {
         background-color: black;
         color: #ffffff;
         min-height: 100vh;
@@ -87,15 +100,11 @@
         align-items: center;
         justify-content: center;
         padding: 3rem 2rem;
-        position: relative;
-        overflow: hidden;
     }
 
     .wrapper {
-        position: relative;
-        z-index: 1;
         width: 100%;
-        max-width: 420px;
+        max-width: 520px;
     }
 
     .header {
@@ -110,13 +119,26 @@
         margin: 0 0 0.5rem;
     }
 
+    .subtitle {
+        color: #8a8a9a;
+        font-size: 1rem;
+        margin: 0;
+    }
+
     form {
         display: flex;
         flex-direction: column;
         gap: 1.25rem;
     }
 
-    input {
+    .field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+
+    input,
+    textarea {
         width: 100%;
         padding: 0.75rem 1rem;
         font-size: 1rem;
@@ -127,43 +149,36 @@
         outline: none;
         transition: border-color 0.2s, box-shadow 0.2s;
         font-family: inherit;
+        box-sizing: border-box;
     }
 
-    input::placeholder {
+    textarea {
+        resize: vertical;
+        min-height: 120px;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
         color: gray;
     }
 
-    input:focus {
+    input:focus,
+    textarea:focus {
         border-color: #00e5ff;
         box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.15);
     }
 
-    .error {
+    .form-error {
         color: red;
         font-size: 0.85rem;
         margin: 0;
         text-align: center;
     }
 
-    form {
-        margin-top: 0.5rem;
-    }
-
-    .footer {
-        text-align: center;
-        margin-top: 1.5rem;
-        font-size: 0.9rem;
-        color: #8a8a9a;
-    }
-
-    .footer a {
+    .form-success {
         color: #00e5ff;
-        text-decoration: none;
-        cursor: pointer;
-        font-weight: 600;
-    }
-
-    .footer a:hover {
-        text-decoration: underline;
+        font-size: 0.85rem;
+        margin: 0;
+        text-align: center;
     }
 </style>

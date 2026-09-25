@@ -62,7 +62,6 @@
 
 <template>
     <div class="signup-page">
-        <div class="grid"></div>
         <div class="wrapper">
             <div class="header">
                 <h1 class="title">Rekisteröidy</h1>
@@ -134,16 +133,6 @@
         padding: 3rem 2rem;
         position: relative;
         overflow: hidden;
-    }
-
-    .grid {
-        position: absolute;
-        inset: 0;
-        background-image:
-            linear-gradient(rgba(0, 229, 255, 0.04) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0, 229, 255, 0.04) 1px, transparent 1px);
-        background-size: 60px 60px;
-        pointer-events: none;
     }
 
     .wrapper {

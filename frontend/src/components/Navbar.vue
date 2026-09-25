@@ -25,11 +25,13 @@
                 <ul v-if="user" class="navbar-nav ms-auto">
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle profile-link" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <span class="avatar">{{ initials }}</span>
+                            <span class="avatar" :style="avatarStyle">{{ initials }}</span>
                             <span class="username">{{ user.username }}</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end dropdown-dark">
                             <li><span class="dropdown-text">{{ user.email }}</span></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" :class="{ active: currentRoute === '/account' }" href="#" @click.prevent="$router.push('/account')">Tiliasetukset</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="#" @click.prevent="handleLogout">Kirjaudu ulos</a></li>
                         </ul>
@@ -49,6 +51,11 @@
     const currentRoute = computed(() => route.path);
     const { user, logout } = useAuth();
 
+    const profileColor = computed(() => {
+        if (!user.value) return '';
+        return localStorage.getItem('profileColor') || '';
+    });
+
     const initials = computed(() => {
         if (!user.value) return '';
         return user.value.username
@@ -57,6 +64,11 @@
             .join('')
             .toUpperCase()
             .slice(0, 2);
+    });
+
+    const avatarStyle = computed(() => {
+        const color = profileColor.value;
+        return color ? { background: color } : {};
     });
 
     async function handleLogout() {
@@ -119,7 +131,7 @@
         width: 32px;
         height: 32px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #00e5ff, #0077ff);
+        background: #00e5ff;
         color: #000;
         display: inline-flex;
         align-items: center;
