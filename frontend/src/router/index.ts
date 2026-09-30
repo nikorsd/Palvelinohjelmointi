@@ -4,8 +4,9 @@ import Signin from "@/views/Signin.vue";
 import Signup from "@/views/Signup.vue";
 import AccountEditor from "@/views/AccountEditor.vue";
 import Contact from "@/views/Contact.vue";
+import Admin from "@/views/Admin.vue";
 import { createRouter, createWebHistory } from "vue-router";
-import { useAuth } from '@/composables/auth';
+import { useAuth, hasRole } from '@/composables/auth';
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -40,6 +41,12 @@ const router = createRouter({
           path: '/contact',
           name: 'contact',
           component: Contact
+        },
+        {
+          path: '/admin',
+          name: 'admin',
+          component: Admin,
+          meta: { requiresAuth: true, requiresAdmin: true }
         }
     ],
 });
@@ -52,6 +59,9 @@ router.beforeEach(async (to) => {
     }
     if (to.meta.requiresAuth && !user.value) {
         return { name: 'signin' };
+    }
+    if (to.meta.requiresAdmin && !hasRole('Admin')) {
+        return { name: 'home' };
     }
 });
 

@@ -1,3 +1,35 @@
+<script setup lang="ts">
+    import { computed } from 'vue';
+    import { useRoute } from 'vue-router';
+    import { useAuth, hasRole } from '@/composables/auth';
+    import { useProfileColor } from '@/composables/profileColor';
+    import router from '@/router';
+
+    const route = useRoute();
+    const currentRoute = computed(() => route.path);
+    const { user, logout } = useAuth();
+    const profileColor = useProfileColor();
+
+    const initials = computed(() => {
+        if (!user.value) return '';
+        return user.value.username
+            .split(' ')
+            .map(w => w[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2);
+    });
+
+    const avatarStyle = computed(() => {
+        return { background: profileColor.value };
+    });
+
+    async function handleLogout() {
+        router.push('/')
+        await logout();
+    }
+</script>
+
 <template>
     <nav class="navbar navbar-expand-lg bg-body-tertiary">
         <div class="container-fluid">
@@ -31,6 +63,7 @@
                         <ul class="dropdown-menu dropdown-menu-end dropdown-dark">
                             <li><span class="dropdown-text">{{ user.email }}</span></li>
                             <li><hr class="dropdown-divider"></li>
+                            <li><a v-if="hasRole('Admin')" class="dropdown-item" :class="{ active: currentRoute === '/admin' }" href="#" @click.prevent="$router.push('/admin')">Admin</a></li>
                             <li><a class="dropdown-item" :class="{ active: currentRoute === '/account' }" href="#" @click.prevent="$router.push('/account')">Tiliasetukset</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="#" @click.prevent="handleLogout">Kirjaudu ulos</a></li>
@@ -41,41 +74,6 @@
         </div>
     </nav>
 </template>
-
-<script setup>
-    import { computed } from 'vue';
-    import { useRoute } from 'vue-router';
-    import { useAuth } from '@/composables/auth';
-
-    const route = useRoute();
-    const currentRoute = computed(() => route.path);
-    const { user, logout } = useAuth();
-
-    const profileColor = computed(() => {
-        if (!user.value) return '';
-        return localStorage.getItem('profileColor') || '';
-    });
-
-    const initials = computed(() => {
-        if (!user.value) return '';
-        return user.value.username
-            .split(' ')
-            .map(w => w[0])
-            .join('')
-            .toUpperCase()
-            .slice(0, 2);
-    });
-
-    const avatarStyle = computed(() => {
-        const color = profileColor.value;
-        return color ? { background: color } : {};
-    });
-
-    async function handleLogout() {
-        await logout();
-        $router.push('/signin');
-    }
-</script>
 
 <style scoped>
     .navbar {

@@ -27,8 +27,14 @@
             form.username = user.value.username;
             form.email = user.value.email;
         }
-        const saved = localStorage.getItem('profileColor');
-        if (saved) form.profileColor = saved;
+        // Prefer server-saved color, fall back to localStorage
+        if (user.value?.profileColor) {
+            form.profileColor = user.value.profileColor;
+            localStorage.setItem('profileColor', user.value.profileColor);
+        } else {
+            const saved = localStorage.getItem('profileColor');
+            if (saved) form.profileColor = saved;
+        }
     });
 
     function pickColor(color) {

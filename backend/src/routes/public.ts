@@ -80,7 +80,7 @@ router.post("/signin", (req, res) => {
 
     return res.json({
         message: "Kirjautuminen onnistui.",
-        user: { id: user.id, username: user.username, email: user.email },
+        user: { id: user.id, username: user.username, email: user.email, role: user.role },
     });
 });
 

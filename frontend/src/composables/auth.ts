@@ -4,18 +4,38 @@ export interface UserProfile {
     id: number;
     username: string;
     email: string;
+    role?: string;
+    profileColor?: string | null;
 }
 
-const user = ref<UserProfile | null>(null);
+export interface AdminUser {
+    id: number;
+    username: string;
+    email: string;
+    role: string;
+    profileColor?: string | null;
+    created_at: string;
+}
+
+export const user = ref<UserProfile | null>(null);
 const loading = ref(true);
+
+export function hasRole(role: string): boolean {
+    return user.value?.role === role;
+}
+
+export function hasAnyRole(...roles: string[]): boolean {
+    return roles.includes(user.value?.role ?? '');
+}
 
 async function fetchMe() {
     try {
         const res = await fetch('/api/me', { credentials: 'include' });
         if (res.ok) {
             user.value = await res.json();
+            console.debug(user)
         } else {
-            // User deleted or session expired — clear everything
+            // User deleted or session expired
             user.value = null;
             try {
                 await fetch('/api/logout', { method: 'POST', credentials: 'include' });
@@ -57,5 +77,5 @@ export function useAuth() {
         user.value = null;
     }
 
-    return { user, loading, fetchMe, login, logout };
+    return { user, loading, fetchMe, login, logout, hasRole, hasAnyRole };
 }

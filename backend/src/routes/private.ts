@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from "express";
-import { findSessionByToken, deleteSessionByToken, findUserByEmail, getDb, hashPassword, deleteSessionsByUserId } from "../db/database";
+import { findSessionByToken, deleteSessionByToken, findUserByEmail, getDb, hashPassword, deleteSessionsByUserId, getAllUsers } from "../db/database";
 
 const router = Router();
 
@@ -34,9 +34,8 @@ router.post("/logout", authenticate, (req, res) => {
 // Current user
 router.get("/me", authenticate, (req, res) => {
     const session = (req as any).session;
-    const user = findUserByEmail(
-        (getDb().prepare("SELECT email FROM users WHERE id = ?").get(session.user_id) as any).email
-    );
+    const db = getDb();
+    const user = db.prepare("SELECT id, username, email, role, profile_color FROM users WHERE id = ?").get(session.user_id) as any;
     if (!user) {
         return res.status(404).json({ error: "Käyttäjää ei löydy." });
     }
@@ -44,6 +43,8 @@ router.get("/me", authenticate, (req, res) => {
         id: user.id,
         username: user.username,
         email: user.email,
+        role: user.role,
+        profileColor: user.profile_color,
     });
 });
 
@@ -81,12 +82,11 @@ router.patch("/account", authenticate, (req, res) => {
             deleteSessionsByUserId(session.user_id);
         }
 
-        // Profile color is managed client-side via localStorage
         if (profileColor !== undefined) {
-            // accepted — stored locally
+            db.prepare("UPDATE users SET profile_color = ? WHERE id = ?").run(profileColor, session.user_id);
         }
 
-        const updatedUser = db.prepare("SELECT id, username, email FROM users WHERE id = ?").get(session.user_id) as any;
+        const updatedUser = db.prepare("SELECT id, username, email, profile_color FROM users WHERE id = ?").get(session.user_id) as any;
         return res.json({ message: "Profiili päivitetty.", user: updatedUser });
     } catch (err) {
         console.error("Account update error:", err);
@@ -100,8 +100,6 @@ router.delete("/account", authenticate, (req, res) => {
     const session = (req as any).session;
 
     try {
-        // Delete all sessions for this user
-        db.prepare("DELETE FROM sessions WHERE user_id = ?").run(session.user_id);
         // Delete the user
         db.prepare("DELETE FROM users WHERE id = ?").run(session.user_id);
         // Clear session cookie
@@ -113,5 +111,24 @@ router.delete("/account", authenticate, (req, res) => {
     }
 });
 
-export { authenticate };
+// Admin check middleware
+function isAdmin(req: Request, res: Response, next: NextFunction) {
+    const session = (req as any).session;
+    if (!session) {
+        return res.status(401).json({ error: "Ei kirjautunut." });
+    }
+    const user = getDb().prepare("SELECT role FROM users WHERE id = ?").get(session.user_id) as any;
+    if (!user || user.role !== "Admin") {
+        return res.status(403).json({ error: "Vaaditaan Admin-oikeuksia." });
+    }
+    next();
+}
+
+// List all users (admin only)
+router.get("/admin/users", authenticate, isAdmin, (_req, res) => {
+    const users = getAllUsers();
+    return res.json({ users });
+});
+
+export { authenticate, isAdmin };
 export default router;

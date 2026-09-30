@@ -1,3 +1,7 @@
+<script setup>
+    import { user } from '@/composables/auth.ts';
+</script>
+
 <template>
     <div class="home-page">
         <div class="content">
@@ -8,7 +12,7 @@
             </h1>
             <p class="desc">Kahden päivän turnaus. Tule pelaamaan tai katselemaan.</p>
             <div class="actions">
-                <button class="btn-primary" @click="$router.push('/signup')">
+                <button v-if="!user" class="btn-primary" @click="$router.push('/signup')">
                     Rekisteröidy
                 </button>
             </div>
