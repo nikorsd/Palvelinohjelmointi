@@ -31,7 +31,9 @@ router.post("/signup", (req, res) => {
     }
 
     if (password.length < 8) {
-        return res.status(400).json({ error: "Salasanan täytyy olla vähintään 8 merkkiä." });
+        return res
+            .status(400)
+            .json({ error: "Salasanan täytyy olla vähintään 8 merkkiä." });
     }
 
     const { username: userDup, email: emailDup } = isDuplicate(username, email);
@@ -39,7 +41,9 @@ router.post("/signup", (req, res) => {
         return res.status(409).json({ error: "Käyttäjänimi on jo käytössä." });
     }
     if (emailDup) {
-        return res.status(409).json({ error: "Sähköposti on jo rekisteröity. Kirjaudu sisään?" });
+        return res
+            .status(409)
+            .json({ error: "Sähköposti on jo rekisteröity. Kirjaudu sisään?" });
     }
 
     try {
@@ -47,7 +51,9 @@ router.post("/signup", (req, res) => {
         return res.status(201).json({ message: "Käyttäjä luotu! Tervetuloa." });
     } catch (err) {
         console.error("Signup error:", err);
-        return res.status(500).json({ error: "Sisäinen virhe. Kokeile myöhemmin uudelleen." });
+        return res
+            .status(500)
+            .json({ error: "Sisäinen virhe. Kokeile myöhemmin uudelleen." });
     }
 });
 
@@ -56,16 +62,22 @@ router.post("/signin", (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-        return res.status(400).json({ error: "Sähköposti ja salasana vaaditaan." });
+        return res
+            .status(400)
+            .json({ error: "Sähköposti ja salasana vaaditaan." });
     }
 
     const user = findUserByEmail(email);
     if (!user) {
-        return res.status(401).json({ error: "Väärä sähköposti tai salasana." });
+        return res
+            .status(401)
+            .json({ error: "Väärä sähköposti tai salasana." });
     }
 
     if (!verifyPassword(password, user.salt, user.password)) {
-        return res.status(401).json({ error: "Väärä sähköposti tai salasana." });
+        return res
+            .status(401)
+            .json({ error: "Väärä sähköposti tai salasana." });
     }
 
     const session = createSession(user.id, SESSION_MS);
@@ -80,7 +92,12 @@ router.post("/signin", (req, res) => {
 
     return res.json({
         message: "Kirjautuminen onnistui.",
-        user: { id: user.id, username: user.username, email: user.email, role: user.role },
+        user: {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            role: user.role,
+        },
     });
 });
 
@@ -94,10 +111,14 @@ router.post("/contact", (req, res) => {
 
     try {
         insertContact(subject, email, message);
-        return res.json({ message: "Viesti lähetetty! Kiitos yhteydenotosta." });
+        return res.json({
+            message: "Viesti lähetetty! Kiitos yhteydenotosta.",
+        });
     } catch (err) {
         console.error("Contact error:", err);
-        return res.status(500).json({ error: "Sisäinen virhe. Kokeile myöhemmin uudelleen." });
+        return res
+            .status(500)
+            .json({ error: "Sisäinen virhe. Kokeile myöhemmin uudelleen." });
     }
 });
 

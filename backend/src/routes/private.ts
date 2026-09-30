@@ -1,5 +1,13 @@
 import { Router, Request, Response, NextFunction } from "express";
-import { findSessionByToken, deleteSessionByToken, findUserByEmail, getDb, hashPassword, deleteSessionsByUserId, getAllUsers } from "../db/database";
+import {
+    findSessionByToken,
+    deleteSessionByToken,
+    findUserByEmail,
+    getDb,
+    hashPassword,
+    deleteSessionsByUserId,
+    getAllUsers,
+} from "../db/database";
 
 const router = Router();
 
@@ -7,7 +15,9 @@ const COOKIE_NAME = "session_token";
 
 // Auth
 function authenticate(req: Request, res: Response, next: NextFunction) {
-    const token = req.cookies[COOKIE_NAME] || req.headers.authorization?.replace("Bearer ", "");
+    const token =
+        req.cookies[COOKIE_NAME] ||
+        req.headers.authorization?.replace("Bearer ", "");
     if (!token) {
         return res.status(401).json({ error: "Ei kirjautunut." });
     }
@@ -35,7 +45,11 @@ router.post("/logout", authenticate, (req, res) => {
 router.get("/me", authenticate, (req, res) => {
     const session = (req as any).session;
     const db = getDb();
-    const user = db.prepare("SELECT id, username, email, role, profile_color FROM users WHERE id = ?").get(session.user_id) as any;
+    const user = db
+        .prepare(
+            "SELECT id, username, email, role, profile_color FROM users WHERE id = ?",
+        )
+        .get(session.user_id) as any;
     if (!user) {
         return res.status(404).json({ error: "Käyttäjää ei löydy." });
     }
@@ -56,37 +70,62 @@ router.patch("/account", authenticate, (req, res) => {
 
     try {
         if (username) {
-            const existing = db.prepare("SELECT 1 FROM users WHERE username = ? AND id != ?").get(username, session.user_id) as any;
+            const existing = db
+                .prepare("SELECT 1 FROM users WHERE username = ? AND id != ?")
+                .get(username, session.user_id) as any;
             if (existing) {
-                return res.status(409).json({ error: "Käyttäjänimi on jo käytössä." });
+                return res
+                    .status(409)
+                    .json({ error: "Käyttäjänimi on jo käytössä." });
             }
-            db.prepare("UPDATE users SET username = ? WHERE id = ?").run(username, session.user_id);
+            db.prepare("UPDATE users SET username = ? WHERE id = ?").run(
+                username,
+                session.user_id,
+            );
         }
 
         if (email) {
-            const existing = db.prepare("SELECT 1 FROM users WHERE email = ? AND id != ?").get(email, session.user_id) as any;
+            const existing = db
+                .prepare("SELECT 1 FROM users WHERE email = ? AND id != ?")
+                .get(email, session.user_id) as any;
             if (existing) {
-                return res.status(409).json({ error: "Sähköposti on jo käytössä." });
+                return res
+                    .status(409)
+                    .json({ error: "Sähköposti on jo käytössä." });
             }
-            db.prepare("UPDATE users SET email = ? WHERE id = ?").run(email, session.user_id);
+            db.prepare("UPDATE users SET email = ? WHERE id = ?").run(
+                email,
+                session.user_id,
+            );
         }
 
         if (password) {
-            const user = db.prepare("SELECT * FROM users WHERE id = ?").get(session.user_id) as any;
+            const user = db
+                .prepare("SELECT * FROM users WHERE id = ?")
+                .get(session.user_id) as any;
             if (!user) {
                 return res.status(404).json({ error: "Käyttäjää ei löydy." });
             }
             const { salt, hash } = hashPassword(password);
-            db.prepare("UPDATE users SET password = ?, salt = ? WHERE id = ?").run(hash, salt, session.user_id);
+            db.prepare(
+                "UPDATE users SET password = ?, salt = ? WHERE id = ?",
+            ).run(hash, salt, session.user_id);
             // Invalidate all sessions on password change
             deleteSessionsByUserId(session.user_id);
         }
 
         if (profileColor !== undefined) {
-            db.prepare("UPDATE users SET profile_color = ? WHERE id = ?").run(profileColor, session.user_id);
+            db.prepare("UPDATE users SET profile_color = ? WHERE id = ?").run(
+                profileColor,
+                session.user_id,
+            );
         }
 
-        const updatedUser = db.prepare("SELECT id, username, email, profile_color FROM users WHERE id = ?").get(session.user_id) as any;
+        const updatedUser = db
+            .prepare(
+                "SELECT id, username, email, profile_color FROM users WHERE id = ?",
+            )
+            .get(session.user_id) as any;
         return res.json({ message: "Profiili päivitetty.", user: updatedUser });
     } catch (err) {
         console.error("Account update error:", err);
@@ -117,7 +156,9 @@ function isAdmin(req: Request, res: Response, next: NextFunction) {
     if (!session) {
         return res.status(401).json({ error: "Ei kirjautunut." });
     }
-    const user = getDb().prepare("SELECT role FROM users WHERE id = ?").get(session.user_id) as any;
+    const user = getDb()
+        .prepare("SELECT role FROM users WHERE id = ?")
+        .get(session.user_id) as any;
     if (!user || user.role !== "Admin") {
         return res.status(403).json({ error: "Vaaditaan Admin-oikeuksia." });
     }
