@@ -7,6 +7,7 @@ import Contact from "@/views/Contact.vue";
 import Admin from "@/views/Admin.vue";
 import { createRouter, createWebHistory } from "vue-router";
 import { useAuth, hasRole } from '@/composables/auth';
+import Chat from "@/views/Chat.vue";
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -41,6 +42,11 @@ const router = createRouter({
           path: '/contact',
           name: 'contact',
           component: Contact
+        },
+        {
+          path: '/chat',
+          name: 'chat',
+          component: Chat
         },
         {
           path: '/admin',

@@ -6,6 +6,7 @@ import {
     verifyPassword,
     createSession,
     insertContact,
+    getDb
 } from "../db/database";
 
 const router = Router();
@@ -16,6 +17,14 @@ const COOKIE_NAME = "session_token";
 // Health check
 router.get("/health", (_req, res) => {
     res.json({ status: "ok" });
+});
+
+router.get("/chat", (req, res) => {
+    const db = getDb();
+    const messages = db.prepare(
+        "SELECT c.id, c.message, c.user_id, c.created_at, u.username, u.profile_color AS profileColor FROM chats c JOIN users u ON c.user_id = u.id ORDER BY c.created_at"
+    ).all() as any[];
+    return res.json({ messages });
 });
 
 // Signup

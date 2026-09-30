@@ -53,6 +53,9 @@
                     <li class="nav-item">
                         <a class="nav-link" :class="{ active: currentRoute === '/contact' }" @click="$router.push('/contact')">Ota yhteyttä</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" :class="{ active: currentRoute === '/chat' }" @click="$router.push('/chat')">Chat</a>
+                    </li>
                 </ul>
                 <ul v-if="user" class="navbar-nav ms-auto">
                     <li class="nav-item dropdown">

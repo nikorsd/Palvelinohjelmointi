@@ -33,6 +33,14 @@ function authenticate(req: Request, res: Response, next: NextFunction) {
     next();
 }
 
+// Chat
+router.post("/chat", authenticate, (req, res) => {
+    const db = getDb();
+    const session = (req as any).session;
+    db.prepare("INSERT INTO chats (message, user_id) VALUES (?, ?)").run(req.body.message, session.user_id);
+    return res.json({ status: "Message sent." });
+});
+
 // Logout
 router.post("/logout", authenticate, (req, res) => {
     const token = (req as any).session.token;

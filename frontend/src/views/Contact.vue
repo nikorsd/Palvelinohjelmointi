@@ -48,7 +48,7 @@
         <div class="wrapper">
             <div class="header">
                 <h1 class="title">Ota yhteyttä</h1>
-                <p class="subtitle">Lähetä meille viesti.</p>
+                <p class="subtitle">Palautetta? Kysymyksiä, pistä viestiä</p>
             </div>
             <form @submit.prevent="handleSubmit">
                 <div class="field">
@@ -87,6 +87,11 @@
                     {{ loading ? 'Lähetetään...' : 'Lähetä viesti' }}
                 </button>
             </form>
+            <br>
+            <div class="footer">
+                <h5>Tai sähköpostilla</h5>
+                <p class="subtitle">yhteydenotto@siistit-lanit.com</p>
+            </div>
         </div>
     </div>
 </template>
@@ -107,7 +112,7 @@
         max-width: 520px;
     }
 
-    .header {
+    .header, .footer {
         text-align: center;
         margin-bottom: 2rem;
     }

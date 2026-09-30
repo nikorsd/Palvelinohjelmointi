@@ -28,28 +28,41 @@ export function getDb(): Database.Database {
 
 // Create all required tables in the database.
 export function createTables(database: Database.Database): void {
+    // Users table
     database.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-      id          INTEGER PRIMARY KEY AUTOINCREMENT,
-      username    TEXT    NOT NULL UNIQUE,
-      email       TEXT    NOT NULL UNIQUE,
-      password    TEXT    NOT NULL,
-      salt        TEXT    NOT NULL,
-      role        TEXT    NOT NULL DEFAULT 'User',
-      profile_color TEXT,
-      created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
-    );
-  `);
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL UNIQUE,
+            email TEXT NOT NULL UNIQUE,
+            password TEXT NOT NULL,
+            salt TEXT NOT NULL,
+            role TEXT NOT NULL DEFAULT 'User',
+            profile_color TEXT,
+            created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+    `);
 
+    // Contacts
     database.exec(`
-    CREATE TABLE IF NOT EXISTS contacts (
-      id         INTEGER PRIMARY KEY AUTOINCREMENT,
-      subject   TEXT    NOT NULL,
-      email     TEXT    NOT NULL,
-      message   TEXT    NOT NULL,
-      created_at TEXT    NOT NULL DEFAULT (datetime('now'))
-    );
-  `);
+        CREATE TABLE IF NOT EXISTS contacts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            subject TEXT NOT NULL,
+            email TEXT NOT NULL,
+            message TEXT NOT NULL,
+            created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+    `);
+
+    // Chats
+    database.exec(`
+        CREATE TABLE IF NOT EXISTS chats (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            message TEXT NOT NULL,
+            user_id INTEGER NOT NULL,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        );
+    `);
 }
 
 // Check whether the database file exists on disk.
