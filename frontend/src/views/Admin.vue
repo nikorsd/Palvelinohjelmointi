@@ -1,6 +1,7 @@
 <script setup lang="ts">
     import { ref, onMounted } from 'vue';
     import { useAuth, type AdminUser } from '@/composables/auth';
+    import UserEditor from '@/components/UserEditor.vue';
     import '../components/styles/Button.css';
 
     const { hasRole } = useAuth();
@@ -8,6 +9,7 @@
     const users = ref<AdminUser[]>([]);
     const loading = ref(true);
     const error = ref('');
+    const selectedUser = ref<AdminUser | null>(null)
 
     async function fetchUsers() {
         loading.value = true;
@@ -67,7 +69,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="u in users" :key="u.id">
+                        <tr @click="selectedUser = u" class="user-entry" v-for="u in users" :key="u.id">
                             <td>{{ u.id }}</td>
                             <td>{{ u.username }}</td>
                             <td>{{ u.email }}</td>
@@ -88,6 +90,8 @@
             <p class="footer">
                 <a @click="$router.push('/')">← Back</a>
             </p>
+
+            <UserEditor :user="selectedUser" @updated="fetchUsers" @deleted="fetchUsers"></UserEditor>
         </div>
     </div>
 </template>
@@ -190,7 +194,7 @@
     .role-badge {
         display: inline-block;
         padding: 0.2rem 0.6rem;
-        border-radius: 4px;
+        border-radius: 2px;
         font-size: 0.8rem;
         font-weight: 600;
     }
@@ -236,5 +240,13 @@
 
     .footer a:hover {
         text-decoration: underline;
+    }
+
+    .user-entry {
+        cursor: pointer;
+    }
+
+    .user-entry:hover {
+        background-color: rgb(10,10,10);
     }
 </style>

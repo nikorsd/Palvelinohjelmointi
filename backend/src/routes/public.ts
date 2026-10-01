@@ -11,16 +11,13 @@ import {
 
 const router = Router();
 
-const SESSION_MS = 3 * 24 * 60 * 60 * 1000;
-const COOKIE_NAME = "session_token";
-
 // Health check
 router.get("/health", (_req, res) => {
     res.json({ status: "ok" });
 });
 
 router.get("/chat", (req, res) => {
-    const db = getDb();
+    const db = getDb()
     const messages = db.prepare(
         "SELECT c.id, c.message, c.user_id, c.created_at, u.username, u.profile_color AS profileColor FROM chats c JOIN users u ON c.user_id = u.id ORDER BY c.created_at"
     ).all() as any[];
@@ -89,13 +86,13 @@ router.post("/signin", (req, res) => {
             .json({ error: "Väärä sähköposti tai salasana." });
     }
 
-    const session = createSession(user.id, SESSION_MS);
+    const session = createSession(user.id, 259200000);
 
-    res.cookie(COOKIE_NAME, session.token, {
+    res.cookie("session_token", session.token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
-        maxAge: SESSION_MS,
+        maxAge: 259200000,
         path: "/",
     });
 

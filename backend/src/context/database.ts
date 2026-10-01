@@ -1,29 +1,30 @@
-import Database from "better-sqlite3";
-import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
-import { existsSync, mkdirSync } from "node:fs";
-import { join, dirname } from "node:path";
+import Database from "better-sqlite3"
+import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto"
+import { existsSync, mkdirSync } from "node:fs"
+import { get } from "node:https"
+import { join, dirname } from "node:path"
 
-const DB_PATH = join(__dirname, "..", "..", "data", "nayttotyo.db");
+const DB_PATH = join(__dirname, "..", "..", "data", "nayttotyo.db")
 
-let db: Database.Database | null = null;
+let db: Database.Database | null = null
 
 // In-memory session store (keyed by token)
-const sessions = new Map<string, SessionRow>();
-let sessionIdCounter = 0;
+const sessions = new Map<string, SessionRow>()
+let sessionIdCounter = 0
 
 // Get the database instance. Creates the database file and tables if they don't exist.
 export function getDb(): Database.Database {
     if (!db) {
         // Ensure the data directory exists
-        const dbDir = dirname(DB_PATH);
+        const dbDir = dirname(DB_PATH)
         if (!existsSync(dbDir)) {
-            mkdirSync(dbDir, { recursive: true });
+            mkdirSync(dbDir, { recursive: true })
         }
-        db = new Database(DB_PATH);
+        db = new Database(DB_PATH)
 
-        createTables(db);
+        createTables(db)
     }
-    return db;
+    return db
 }
 
 // Create all required tables in the database.
@@ -39,8 +40,8 @@ export function createTables(database: Database.Database): void {
             role TEXT NOT NULL DEFAULT 'User',
             profile_color TEXT,
             created_at TEXT NOT NULL DEFAULT (datetime('now'))
-        );
-    `);
+        )
+    `)
 
     // Contacts
     database.exec(`
@@ -50,8 +51,8 @@ export function createTables(database: Database.Database): void {
             email TEXT NOT NULL,
             message TEXT NOT NULL,
             created_at TEXT NOT NULL DEFAULT (datetime('now'))
-        );
-    `);
+        )
+    `)
 
     // Chats
     database.exec(`
@@ -61,44 +62,60 @@ export function createTables(database: Database.Database): void {
             user_id INTEGER NOT NULL,
             created_at TEXT NOT NULL DEFAULT (datetime('now')),
             FOREIGN KEY (user_id) REFERENCES users(id)
-        );
-    `);
+        )
+    `)
+
+    // Participants
+    database.exec(`
+        CREATE TABLE IF NOT EXISTS participants (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    `)
 }
 
 // Check whether the database file exists on disk.
 export function databaseExists(): boolean {
-    const fs = require("node:fs");
-    return fs.existsSync(DB_PATH);
+    const fs = require("node:fs")
+    return fs.existsSync(DB_PATH)
 }
 
 // Re-export interfaces and helpers so existing imports still work
 export interface UserRow {
-    id: number;
-    username: string;
-    email: string;
-    password: string;
-    salt: string;
-    role: string;
-    profile_color: string | null;
-    created_at: string;
+    id: number
+    username: string
+    email: string
+    password: string
+    salt: string
+    role: string
+    profile_color: string | null
+    created_at: string
+}
+
+export interface ParticipantRow {
+    id: number
+    user_id: number
+    created_at: string
 }
 
 export interface SessionRow {
-    id: number;
-    token: string;
-    user_id: number;
-    expires_at: string;
-    created_at: string;
+    id: number
+    token: string
+    user_id: number
+    expires_at: string
+    created_at: string
 }
 
 export function hashPassword(password: string): { salt: string; hash: string } {
-    const salt = randomBytes(16).toString("base64");
+    const salt = randomBytes(16).toString("base64")
     const hash = scryptSync(password, salt, 64, {
         N: 16384,
         r: 8,
         p: 1,
-    }).toString("base64");
-    return { salt, hash };
+    }).toString("base64")
+    return { salt, hash }
 }
 
 export function insertUser(
@@ -107,36 +124,36 @@ export function insertUser(
     password: string,
     profileColor?: string,
 ): UserRow {
-    const { salt, hash } = hashPassword(password);
-    const db = getDb();
+    const { salt, hash } = hashPassword(password)
+    const db = getDb()
     const stmt = db.prepare(
         "INSERT INTO users (username, email, password, salt, profile_color) VALUES (?, ?, ?, ?, ?)",
-    );
-    const info = stmt.run(username, email, hash, salt, profileColor || null);
+    )
+    const info = stmt.run(username, email, hash, salt, profileColor || null)
     const row = db
         .prepare("SELECT * FROM users WHERE id = ?")
-        .get(info.lastInsertRowid) as UserRow;
-    return row;
+        .get(info.lastInsertRowid) as UserRow
+    return row
 }
 
 export function findUserByEmail(email: string): UserRow | undefined {
-    const db = getDb();
+    const db = getDb()
     return db.prepare("SELECT * FROM users WHERE email = ?").get(email) as
-        UserRow | undefined;
+        UserRow | undefined
 }
 
 export function findUserByUsername(username: string): UserRow | undefined {
-    const db = getDb();
+    const db = getDb()
     return db
         .prepare("SELECT * FROM users WHERE username = ?")
-        .get(username) as UserRow | undefined;
+        .get(username) as UserRow | undefined
 }
 
 export function isDuplicate(
     username: string,
     email: string,
 ): { username: boolean; email: boolean } {
-    const db = getDb();
+    const db = getDb()
     return {
         username:
             (db
@@ -146,7 +163,7 @@ export function isDuplicate(
             (db
                 .prepare("SELECT 1 FROM users WHERE email = ?")
                 .get(email) as any) !== undefined,
-    };
+    }
 }
 
 export function verifyPassword(
@@ -158,68 +175,124 @@ export function verifyPassword(
         N: 16384,
         r: 8,
         p: 1,
-    }).toString("base64");
-    return timingSafeEqual(Buffer.from(hash), Buffer.from(storedHash));
+    }).toString("base64")
+    return timingSafeEqual(Buffer.from(hash), Buffer.from(storedHash))
 }
 
 export function createSession(
     userId: number,
     msUntilExpiry: number,
 ): SessionRow {
-    const expiresAt = new Date(Date.now() + msUntilExpiry).toISOString();
-    const token = randomBytes(32).toString("base64");
-    const now = new Date().toISOString();
-    sessionIdCounter++;
+    const expiresAt = new Date(Date.now() + msUntilExpiry).toISOString()
+    const token = randomBytes(32).toString("base64")
+    const now = new Date().toISOString()
+    sessionIdCounter++
     const session: SessionRow = {
         id: sessionIdCounter,
         token,
         user_id: userId,
         expires_at: expiresAt,
         created_at: now,
-    };
-    sessions.set(token, session);
-    return session;
+    }
+    sessions.set(token, session)
+    return session
 }
 
 export function findSessionByToken(token: string): SessionRow | undefined {
-    return sessions.get(token);
+    return sessions.get(token)
 }
 
 export function deleteSessionByToken(token: string): void {
-    sessions.delete(token);
+    sessions.delete(token)
 }
 
 export function deleteSessionsByUserId(userId: number): void {
     for (const [token, session] of sessions.entries()) {
         if (session.user_id === userId) {
-            sessions.delete(token);
+            sessions.delete(token)
         }
     }
 }
 
 export interface ContactRow {
-    id: number;
-    subject: string;
-    email: string;
-    message: string;
-    created_at: string;
+    id: number
+    subject: string
+    email: string
+    message: string
+    created_at: string
 }
 
 export function getAllUsers(): any[] {
-    const db = getDb();
-    const rows = db
-        .prepare(
-            "SELECT id, username, email, role, profile_color, created_at FROM users ORDER BY id",
-        )
-        .all() as any[];
+    const db = getDb()
+    const rows = db.prepare(
+        "SELECT id, username, email, role, profile_color, created_at FROM users"
+    ).all() as any[]
     return rows.map((row: any) => ({
         id: row.id,
         username: row.username,
         email: row.email,
         role: row.role,
         profileColor: row.profile_color,
-        created_at: row.created_at,
-    }));
+        created_at: row.created_at
+    }))
+}
+
+export function getAllParticipants() {
+    const db = getDb()
+    const rows = db.prepare(
+        "SELECT id, user_id, created_at FROM participants"
+    ).all() as any[]
+    return rows.map((row: any) => ({
+        id: row.id,
+        user_id: row.user_id,
+        created_at: row.created_at
+    }))
+}
+
+export function removeParticipantById(participantId: number): void {
+    const db = getDb()
+    db.prepare("DELETE FROM participants WHERE id = ?").run(participantId)
+}
+
+export function addParticipantById(user_id: number): ParticipantRow {
+    const db = getDb()
+    const stmt = db.prepare("INSERT INTO participants (user_id) VALUES (?)")
+    const info = stmt.run(user_id)
+    return db.prepare("SELECT * FROM participants WHERE id = ?").get(info.lastInsertRowid) as ParticipantRow
+}
+
+export function updateUser(
+    userId: number,
+    username: string,
+    email: string,
+    role: string,
+    profileColor: string
+): UserRow {
+    const db = getDb()
+    db.prepare(
+        "UPDATE users SET username = ?, email = ?, role = ?, profile_color = ? WHERE id = ?"
+    ).run(username, email, role, profileColor, userId)
+    return db.prepare("SELECT * FROM users WHERE id = ?").get(userId) as UserRow
+}
+
+export function deleteUserById(userId: number): void {
+    const db = getDb()
+    db.prepare("DELETE FROM users WHERE id = ?").run(userId)
+    deleteSessionsByUserId(userId)
+}
+
+export function getUserById(userId: number): UserRow | undefined {
+    const db = getDb()
+    return db.prepare("SELECT * FROM users WHERE id = ?").get(userId) as
+        UserRow | undefined
+}
+
+export function set_user_password(userId: number, password: string): void {
+    const db = getDb()
+    const { salt, hash } = hashPassword(password)
+    db.prepare(
+        "UPDATE users SET password = ?, salt = ? WHERE id = ?",
+    ).run(hash, salt, userId)
 }
 
 export function insertContact(
@@ -227,12 +300,10 @@ export function insertContact(
     email: string,
     message: string,
 ): ContactRow {
-    const db = getDb();
+    const db = getDb()
     const stmt = db.prepare(
         "INSERT INTO contacts (subject, email, message) VALUES (?, ?, ?)",
-    );
-    const info = stmt.run(subject, email, message);
-    return db
-        .prepare("SELECT * FROM contacts WHERE id = ?")
-        .get(info.lastInsertRowid) as ContactRow;
+    )
+    const info = stmt.run(subject, email, message)
+    return db.prepare("SELECT * FROM contacts WHERE id = ?").get(info.lastInsertRowid) as ContactRow
 }

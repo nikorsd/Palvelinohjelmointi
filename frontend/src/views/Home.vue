@@ -15,6 +15,9 @@
                 <button v-if="!user" class="btn-primary" @click="$router.push('/signup')">
                     Rekisteröidy
                 </button>
+                <button v-else class="btn-primary" @click="$router.push('/signup')">
+                    Ilmottaudu
+                </button>
             </div>
         </div>
     </div>
