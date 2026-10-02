@@ -216,9 +216,6 @@
             </div>
         </div>
     </div>
-    <div v-else class="user-editor">
-        <p class="empty-state">Valitse käyttäjä muokataksesi.</p>
-    </div>
 </template>
 
 <style scoped>

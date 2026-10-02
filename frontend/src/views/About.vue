@@ -26,7 +26,7 @@
             <div class="container">
                 <h2 class="signup-title">Tervetuloa pelaamaan</h2>
                 <p class="signup-desc">Varaa itsellesi paikka turnauksesta.</p>
-                <button class="btn-primary btn-large" @click="$router.push('/signup')">Rekisteröidy nyt</button>
+                <button class="btn-primary btn-large" @click="$router.push('/')">Etusivulle</button>
             </div>
         </section>
     </div>

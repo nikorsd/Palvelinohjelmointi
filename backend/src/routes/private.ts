@@ -12,6 +12,8 @@ import {
     getUserById,
     set_user_password,
 } from "../db/database"
+import { getAllContacts, getAllParticipants } from "../context/database"
+import { rateLimit } from "../middleware/rateLimit"
 
 const router = Router()
 
@@ -38,7 +40,7 @@ function authenticate(req: Request, res: Response, next: NextFunction) {
 }
 
 // Chat
-router.post("/chat", authenticate, (req, res) => {
+router.post("/chat", authenticate, rateLimit(), (req, res) => {
     const db = getDb()
     const session = (req as any).session
     db.prepare("INSERT INTO chats (message, user_id) VALUES (?, ?)").run(req.body.message, session.user_id)
@@ -57,11 +59,8 @@ router.post("/logout", authenticate, (req, res) => {
 router.get("/me", authenticate, (req, res) => {
     const session = (req as any).session
     const db = getDb()
-    const user = db
-        .prepare(
-            "SELECT id, username, email, role, profile_color FROM users WHERE id = ?",
-        )
-        .get(session.user_id) as any
+    const user = db.prepare("SELECT id, username, email, role, profile_color, participated FROM users WHERE id = ?").get(session.user_id) as any
+
     if (!user) {
         return res.status(404).json({ error: "Käyttäjää ei löydy." })
     }
@@ -71,6 +70,7 @@ router.get("/me", authenticate, (req, res) => {
         email: user.email,
         role: user.role,
         profileColor: user.profile_color,
+        participated: !!user.participated
     })
 })
 
@@ -162,6 +162,20 @@ router.delete("/account", authenticate, (req, res) => {
     }
 })
 
+router.get("/participate", authenticate, (req, res) => {
+    const db = getDb()
+    const session = (req as any).session
+    db.prepare("UPDATE users SET participated = 1 WHERE id = ?").run(session.user_id)
+    return res.json({ message: "Olet ilmottautunut." })
+})
+
+router.delete("/participate", authenticate, (req, res) => {
+    const db = getDb()
+    const session = (req as any).session
+    db.prepare("UPDATE users SET participated = 0 WHERE id = ?").run(session.user_id)
+    return res.json({ message: "Et ole enään ilmottautunut." })
+})
+
 // Admin check middleware
 function isAdmin(req: Request, res: Response, next: NextFunction) {
     const session = (req as any).session
@@ -176,6 +190,12 @@ function isAdmin(req: Request, res: Response, next: NextFunction) {
     }
     next()
 }
+
+// List all participants
+router.get("/admin/participants", authenticate, isAdmin, (_req, res) => {
+    const participants = getAllParticipants()
+    return res.json({ participants })
+})
 
 // List all users (admin only)
 router.get("/admin/users", authenticate, isAdmin, (_req, res) => {
@@ -242,6 +262,7 @@ router.patch("/admin/users/:id", authenticate, isAdmin, (req, res) => {
                 email: updated.email,
                 role: updated.role,
                 profileColor: updated.profile_color,
+                participated: !!updated.participated,
             },
         })
     } catch (err) {
@@ -266,6 +287,25 @@ router.delete("/admin/users/:id", authenticate, isAdmin, (req, res) => {
         console.error("User delete error:", err)
         return res.status(500).json({ error: "Sisäinen virhe." })
     }
+})
+
+// Toggle participate status (admin only)
+router.post("/admin/participate/:id", authenticate, isAdmin, (req, res) => {
+    const targetId = parseInt(String(req.params.id), 10)
+    const db = getDb()
+    const user = db.prepare("SELECT participated FROM users WHERE id = ?").get(targetId) as any
+    if (!user) {
+        return res.status(404).json({ error: "Käyttäjää ei löydy." })
+    }
+    const newVal = user.participated ? 0 : 1
+    db.prepare("UPDATE users SET participated = ? WHERE id = ?").run(newVal, targetId)
+    return res.json({ participated: newVal === 1 })
+})
+
+// Read contacts (admin only)
+router.get("/admin/contacts", authenticate, isAdmin, (_req, res) => {
+    const contacts = getAllContacts()
+    return res.json({ contacts })
 })
 
 export { authenticate, isAdmin }

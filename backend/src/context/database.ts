@@ -39,6 +39,7 @@ export function createTables(database: Database.Database): void {
             salt TEXT NOT NULL,
             role TEXT NOT NULL DEFAULT 'User',
             profile_color TEXT,
+            participated INTEGER NOT NULL DEFAULT 0,
             created_at TEXT NOT NULL DEFAULT (datetime('now'))
         )
     `)
@@ -64,16 +65,6 @@ export function createTables(database: Database.Database): void {
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     `)
-
-    // Participants
-    database.exec(`
-        CREATE TABLE IF NOT EXISTS participants (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            created_at TEXT NOT NULL DEFAULT (datetime('now')),
-            FOREIGN KEY (user_id) REFERENCES users(id)
-        )
-    `)
 }
 
 // Check whether the database file exists on disk.
@@ -91,6 +82,7 @@ export interface UserRow {
     salt: string
     role: string
     profile_color: string | null
+    participated: number
     created_at: string
 }
 
@@ -225,7 +217,7 @@ export interface ContactRow {
 export function getAllUsers(): any[] {
     const db = getDb()
     const rows = db.prepare(
-        "SELECT id, username, email, role, profile_color, created_at FROM users"
+        "SELECT id, username, email, role, profile_color, participated, created_at FROM users"
     ).all() as any[]
     return rows.map((row: any) => ({
         id: row.id,
@@ -233,6 +225,7 @@ export function getAllUsers(): any[] {
         email: row.email,
         role: row.role,
         profileColor: row.profile_color,
+        participated: !!row.participated,
         created_at: row.created_at
     }))
 }
@@ -245,6 +238,20 @@ export function getAllParticipants() {
     return rows.map((row: any) => ({
         id: row.id,
         user_id: row.user_id,
+        created_at: row.created_at
+    }))
+}
+
+export function getAllContacts() {
+    const db = getDb()
+    const rows = db.prepare(
+        "SELECT id, subject, email, message, created_at FROM contacts"
+    ).all() as any[]
+    return rows.map((row: any) => ({
+        id: row.id,
+        subject: row.subject,
+        email: row.email,
+        message: row.message,
         created_at: row.created_at
     }))
 }
@@ -266,12 +273,13 @@ export function updateUser(
     username: string,
     email: string,
     role: string,
-    profileColor: string
+    profileColor: string,
+    participated?: number
 ): UserRow {
     const db = getDb()
     db.prepare(
-        "UPDATE users SET username = ?, email = ?, role = ?, profile_color = ? WHERE id = ?"
-    ).run(username, email, role, profileColor, userId)
+        "UPDATE users SET username = ?, email = ?, role = ?, profile_color = ?, participated = ? WHERE id = ?"
+    ).run(username, email, role, profileColor, participated ?? 0, userId)
     return db.prepare("SELECT * FROM users WHERE id = ?").get(userId) as UserRow
 }
 

@@ -1,20 +1,22 @@
 import { ref } from 'vue';
 
 export interface UserProfile {
-    id: number;
-    username: string;
-    email: string;
-    role?: string;
-    profileColor?: string | null;
+    id: number
+    username: string
+    email: string
+    role?: string
+    profileColor?: string | null
+    participated: boolean
 }
 
 export interface AdminUser {
-    id: number;
-    username: string;
-    email: string;
-    role: string;
-    profileColor?: string | null;
-    created_at: string;
+    id: number
+    username: string
+    email: string
+    role: string
+    profileColor?: string | null
+    created_at: string
+    participated: boolean
 }
 
 export const user = ref<UserProfile | null>(null);
@@ -28,12 +30,11 @@ export function hasAnyRole(...roles: string[]): boolean {
     return roles.includes(user.value?.role ?? '');
 }
 
-async function fetchMe() {
+export async function fetchMe() {
     try {
         const res = await fetch('/api/me', { credentials: 'include' });
         if (res.ok) {
             user.value = await res.json();
-            console.debug(user)
         } else {
             // User deleted or session expired
             user.value = null;

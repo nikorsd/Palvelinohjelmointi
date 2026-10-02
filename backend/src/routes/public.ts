@@ -8,10 +8,10 @@ import {
     insertContact,
     getDb
 } from "../db/database";
+import { rateLimit } from "../middleware/rateLimit";
 
 const router = Router();
 
-// Health check
 router.get("/health", (_req, res) => {
     res.json({ status: "ok" });
 });
@@ -25,7 +25,7 @@ router.get("/chat", (req, res) => {
 });
 
 // Signup
-router.post("/signup", (req, res) => {
+router.post("/signup", rateLimit(), (req, res) => {
     const { username, email, password, passwordConfirm } = req.body;
 
     if (!username || !email || !password || !passwordConfirm) {
@@ -64,7 +64,7 @@ router.post("/signup", (req, res) => {
 });
 
 // Signin
-router.post("/signin", (req, res) => {
+router.post("/signin", rateLimit(), (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -108,7 +108,7 @@ router.post("/signin", (req, res) => {
 });
 
 // Contact form
-router.post("/contact", (req, res) => {
+router.post("/contact", rateLimit(), (req, res) => {
     const { subject, email, message } = req.body;
 
     if (!subject || !email || !message) {

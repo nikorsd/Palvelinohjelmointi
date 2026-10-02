@@ -1,5 +1,32 @@
 <script setup>
-    import { user } from '@/composables/auth.ts';
+    import { user, fetchMe } from '@/composables/auth.ts';
+    import { onMounted, ref } from 'vue';
+
+    const loading = ref(false)
+
+    async function handleParticipate() {
+        if (loading.value) return
+        loading.value = true
+        try {
+            await fetch('/api/participate')
+            fetchMe()
+        } finally {
+            loading.value = false
+        }
+    }
+
+    async function handleUnparticipate() {
+        if (loading.value) return
+        loading.value = true
+        try {
+            await fetch('/api/participate', {
+                method: 'DELETE'
+            })
+            fetchMe()
+        } finally {
+            loading.value = false
+        }
+    }
 </script>
 
 <template>
@@ -12,12 +39,12 @@
             </h1>
             <p class="desc">Kahden päivän turnaus. Tule pelaamaan tai katselemaan.</p>
             <div class="actions">
-                <button v-if="!user" class="btn-primary" @click="$router.push('/signup')">
-                    Rekisteröidy
-                </button>
-                <button v-else class="btn-primary" @click="$router.push('/signup')">
-                    Ilmottaudu
-                </button>
+                <button v-if="!user" class="btn-primary" @click="$router.push('/signup')">Rekisteröidy</button>
+                <button v-else-if="!user.participated" class="btn-primary" :disabled="loading" @click="handleParticipate()">Ilmottaudu</button>
+                <div v-else class="participated">
+                    <p>Olet ilmottautunut!</p>
+                    <button class="btn-primary danger" :disabled="loading" @click="handleUnparticipate()">Poista ilmoitus</button>
+                </div>
             </div>
         </div>
     </div>
@@ -86,5 +113,14 @@
         line-height: 1.6;
         color: #8a8a9a;
         margin-bottom: 2rem;
+    }
+
+    .participated {
+        color: lime;
+    }
+
+    .danger {
+        color: white;
+        background-color: red;
     }
 </style>

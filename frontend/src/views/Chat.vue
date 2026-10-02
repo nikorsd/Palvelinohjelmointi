@@ -31,6 +31,7 @@
             }
             const data = await res.json();
             messages.value = data.messages || [];
+            await scrollToBottom();
         } catch {
             error.value = 'Yhteydenotto palvelimeen epäonnistui.';
         } finally {
@@ -57,6 +58,7 @@
             }
             inputMessage.value = '';
             await fetchMessages();
+            await scrollToBottom();
         } catch {
             error.value = 'Yhteydenotto palvelimeen epäonnistui.';
         }
