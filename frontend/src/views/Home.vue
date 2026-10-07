@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
     import { user, fetchMe } from '@/composables/auth.ts';
     import { onMounted, ref } from 'vue';
 

@@ -4,6 +4,7 @@ import { user } from './auth';
 /**
  * Returns the user's profile color from the server,
  * falling back to localStorage, then a default cyan.
+ * Written by AI
  */
 export function useProfileColor() {
     return computed(() => {

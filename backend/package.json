@@ -1,6 +1,6 @@
 {
   "name": "nayttotyo-backend",
-  "version": "1.0.0",
+  "version": "261007",
   "description": "",
   "main": "dist/server.js",
   "scripts": {

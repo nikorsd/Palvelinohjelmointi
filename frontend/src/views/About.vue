@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
     // AI generated
     const games = [
         { name: "Counter-Strike 2", emoji: "🔫" },

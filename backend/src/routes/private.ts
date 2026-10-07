@@ -162,6 +162,7 @@ router.delete("/account", authenticate, (req, res) => {
     }
 })
 
+// Participate into event
 router.get("/participate", authenticate, (req, res) => {
     const db = getDb()
     const session = (req as any).session
@@ -169,6 +170,7 @@ router.get("/participate", authenticate, (req, res) => {
     return res.json({ message: "Olet ilmottautunut." })
 })
 
+// "Unparticipate" from event
 router.delete("/participate", authenticate, (req, res) => {
     const db = getDb()
     const session = (req as any).session
@@ -176,7 +178,7 @@ router.delete("/participate", authenticate, (req, res) => {
     return res.json({ message: "Et ole enään ilmottautunut." })
 })
 
-// Admin check middleware
+// Admin check
 function isAdmin(req: Request, res: Response, next: NextFunction) {
     const session = (req as any).session
     if (!session) {
